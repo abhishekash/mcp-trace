@@ -13,11 +13,11 @@ import os
 import sys
 from pathlib import Path
 
-from mcp.server.fastmcp import FastMCP
+from mcp.server.mcpserver import MCPServer
 
 from mcp_trace import core
 
-mcp = FastMCP(
+mcp = MCPServer(
     "mcp-trace",
     instructions=(
         "Query OpenTelemetry traces of agent runs (JSONL span files). "
@@ -120,7 +120,3 @@ def main() -> None:
     _trace_dir = Path(args.trace_dir).resolve()
     print(f"mcp-trace serving traces from {_trace_dir}", file=sys.stderr)
     mcp.run(transport="stdio")
-
-
-if __name__ == "__main__":
-    main()
