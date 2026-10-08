@@ -1,0 +1,41 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "mcp-trace"
+version = "0.1.0"
+description = "MCP server that lets agents query their own OpenTelemetry traces — runs, span trees, slow spans, human-approval logs, token/cost usage."
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.11"
+authors = [{ name = "Abhishek Ash", email = "ash.abhishek@gmail.com" }]
+keywords = ["mcp", "model-context-protocol", "ai-agents", "observability", "opentelemetry", "agent-evals"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+dependencies = [
+    "mcp>=1.2.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+
+[project.scripts]
+mcp-trace = "mcp_trace.server:main"
+
+[project.urls]
+Homepage = "https://github.com/abhishekash/mcp-trace"
+Repository = "https://github.com/abhishekash/mcp-trace"
+Issues = "https://github.com/abhishekash/mcp-trace/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/mcp_trace"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
