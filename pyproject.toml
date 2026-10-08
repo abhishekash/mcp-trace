@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "mcp-trace"
+name = "abhishekash-mcp-trace"
 version = "0.1.0"
 description = "MCP server that lets agents query their own OpenTelemetry traces — runs, span trees, slow spans, human-approval logs, token/cost usage."
 readme = "README.md"
@@ -27,6 +27,7 @@ dev = ["pytest>=8"]
 
 [project.scripts]
 mcp-trace = "mcp_trace.server:main"
+abhishekash-mcp-trace = "mcp_trace.server:main"
 
 [project.urls]
 Homepage = "https://github.com/abhishekash/mcp-trace"

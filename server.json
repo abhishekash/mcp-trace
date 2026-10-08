@@ -12,7 +12,7 @@
     {
       "registryType": "pypi",
       "registryBaseUrl": "https://pypi.org",
-      "identifier": "mcp-trace",
+      "identifier": "abhishekash-mcp-trace",
       "version": "0.1.0",
       "runtimeHint": "uvx",
       "transport": {
