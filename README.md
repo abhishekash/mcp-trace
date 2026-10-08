@@ -1,5 +1,7 @@
 # mcp-trace
 
+<!-- mcp-name: io.github.abhishekash/mcp-trace -->
+
 [![CI](https://github.com/abhishekash/mcp-trace/actions/workflows/ci.yml/badge.svg)](https://github.com/abhishekash/mcp-trace/actions/workflows/ci.yml) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 **Agents that can debug themselves.** An MCP server that exposes your agent runs — stored as plain OpenTelemetry JSONL span files — as queryable tools: runs, span trees, slow spans, human-approval logs, token/cost usage.
@@ -19,6 +21,8 @@ git clone https://github.com/abhishekash/mcp-trace
 cd mcp-trace && uv pip install -e .
 mcp-trace --trace-dir ./traces
 ```
+
+The registry manifest is checked in at [`server.json`](server.json). The package has passed local `uv build` and `twine check`; PyPI publication is wired through GitHub trusted publishing in [`.github/workflows/publish-pypi.yml`](.github/workflows/publish-pypi.yml).
 
 ## Client configuration
 
