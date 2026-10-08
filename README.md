@@ -8,9 +8,14 @@ Pairs with [agent-harness](https://github.com/abhishekash/agent-harness) (which 
 
 ## Install & run
 
+This repository is not claiming a PyPI release yet. Run it directly from GitHub:
+
 ```bash
-pip install mcp-trace          # or: uvx mcp-trace
-mcp-trace --trace-dir ./traces # stdio server; MCP_TRACE_DIR also works
+uvx --from git+https://github.com/abhishekash/mcp-trace.git mcp-trace --trace-dir ./traces
+# or, for local development:
+git clone https://github.com/abhishekash/mcp-trace
+cd mcp-trace && uv pip install -e .
+mcp-trace --trace-dir ./traces
 ```
 
 ## Client configuration
@@ -22,7 +27,7 @@ mcp-trace --trace-dir ./traces # stdio server; MCP_TRACE_DIR also works
   "mcpServers": {
     "agent-traces": {
       "command": "uvx",
-      "args": ["mcp-trace", "--trace-dir", "/path/to/traces"]
+      "args": ["--from", "git+https://github.com/abhishekash/mcp-trace.git", "mcp-trace", "--trace-dir", "/path/to/traces"]
     }
   }
 }
@@ -35,7 +40,7 @@ mcp-trace --trace-dir ./traces # stdio server; MCP_TRACE_DIR also works
   "mcpServers": {
     "agent-traces": {
       "command": "uvx",
-      "args": ["mcp-trace", "--trace-dir", "/path/to/traces"]
+      "args": ["--from", "git+https://github.com/abhishekash/mcp-trace.git", "mcp-trace", "--trace-dir", "/path/to/traces"]
     }
   }
 }
@@ -44,7 +49,7 @@ mcp-trace --trace-dir ./traces # stdio server; MCP_TRACE_DIR also works
 **agent-harness** (mounted as gated tools):
 
 ```bash
-harness run "Why was my last run slow?" --mcp "uvx mcp-trace --trace-dir ./traces"
+harness run "Why was my last run slow?" --mcp "uvx --from git+https://github.com/abhishekash/mcp-trace.git mcp-trace --trace-dir ./traces"
 ```
 
 ## Tools
@@ -78,7 +83,7 @@ Tool descriptions are written as prompts (when-to-use, not just what-it-does) �
 ```
 traces/*.jsonl ──▶ mcp_trace.core (pure query functions, zero deps)
                           │
-                   mcp_trace.server (thin FastMCP/MCPServer adapter, mcp 2.x)
+                   mcp_trace.server (thin MCPServer adapter, mcp 2.x)
                           │
                     stdio (NDJSON JSON-RPC)
 ```
