@@ -26,6 +26,8 @@ mcp-trace --trace-dir ./traces
 
 The registry manifest is checked in at [`server.json`](server.json), pointing to the unique PyPI distribution `abhishekash-mcp-trace`. The package has passed local `uv build` and `twine check`; PyPI publication is wired through GitHub trusted publishing in [`.github/workflows/publish-pypi.yml`](.github/workflows/publish-pypi.yml).
 
+To enable the first publication, add a PyPI trusted publisher for project `abhishekash-mcp-trace`: owner `abhishekash`, repository `mcp-trace`, workflow `publish-pypi.yml`, environment `pypi`. Then run the workflow manually or publish a GitHub release.
+
 ## Client configuration
 
 **Claude Desktop** (`claude_desktop_config.json`):
