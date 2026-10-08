@@ -22,7 +22,7 @@ cd mcp-trace && uv pip install -e .
 mcp-trace --trace-dir ./traces
 ```
 
-The package is published on [PyPI](https://pypi.org/project/abhishekash-mcp-trace/0.1.0/), and the validated [`server.json`](server.json) is live in the [official MCP Registry](https://registry.modelcontextprotocol.io/v0.1/servers/io.github.abhishekash%2Fmcp-trace/versions/0.1.0).
+The package is published on [PyPI](https://pypi.org/project/abhishekash-mcp-trace/0.1.1/), and the validated [`server.json`](server.json) is live in the [official MCP Registry](https://registry.modelcontextprotocol.io/v0.1/servers/io.github.abhishekash%2Fmcp-trace/versions/0.1.1).
 
 ## Client configuration
 

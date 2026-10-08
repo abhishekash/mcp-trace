@@ -12,7 +12,7 @@ from mcp_trace.core import (
     token_usage,
 )
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 __all__ = [
     "approval_log",
     "group_traces",

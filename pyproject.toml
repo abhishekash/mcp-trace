@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "abhishekash-mcp-trace"
-version = "0.1.0"
+version = "0.1.1"
 description = "MCP server that lets agents query their own OpenTelemetry traces — runs, span trees, slow spans, human-approval logs, token/cost usage."
 readme = "README.md"
 license = { text = "MIT" }
