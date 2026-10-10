@@ -10,6 +10,16 @@ The idea: observability shouldn't be a dashboard you read after the fact. It sho
 
 Pairs with [agent-harness](https://github.com/abhishekash/agent-harness) (which writes the traces), but the reader is format-simple: any JSONL of OTel-shaped spans works.
 
+## AI-native use cases
+
+| Question during an agent run | MCP tool | Evidence returned |
+|---|---|---|
+| "Why did yesterday's run stall?" | `list_runs` → `slowest_spans` | Run IDs and the longest model or tool spans. |
+| "Did the agent act after I denied the write?" | `approval_log` → `span_tree` | The recorded decision and subsequent execution path. |
+| "How many model tokens did this run use?" | `token_usage` → `span_tree` | Run-level usage totals and the span tree for context. |
+
+The tools read stored traces; they do not monitor a live run or infer intent from the final answer. See the [real trace fixture](examples/example_trace.jsonl) and the [tool descriptions](src/mcp_trace/server.py) for the exact query contract.
+
 ## Install & run
 
 The `mcp-trace` name is occupied on PyPI by an unrelated project, so this server is published as `abhishekash-mcp-trace`; it exposes both the `abhishekash-mcp-trace` and `mcp-trace` commands.
