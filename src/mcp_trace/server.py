@@ -23,7 +23,10 @@ mcp = MCPServer(
         "Query OpenTelemetry traces of agent runs (JSONL span files). "
         "Use list_runs to see recent runs, run_summary/span_tree to inspect one, "
         "slowest_spans for latency questions, approval_log for what humans "
-        "approved/denied, token_usage for cost questions."
+        "approved/denied, token_usage for cost questions, failure_report for "
+        "errors, tool_stats for tool health, security_audit for identity and "
+        "provenance gaps, recent_activity for incremental live polling, and "
+        "compare_runs for regressions."
     ),
 )
 
@@ -106,6 +109,44 @@ def search_spans(needle: str, trace_id: str | None = None) -> str:
     """Substring search over span names/attributes, e.g. a tool name, file path, or 'denied'."""
     spans = _resolve(trace_id) if trace_id else _spans()
     return _dump(core.search_spans(spans, needle))
+
+
+@mcp.tool()
+def failure_report(trace_id: str | None = None, limit: int = 20) -> str:
+    """Show bounded, redacted tool/provider failures and their actionable diagnostics."""
+    spans = _resolve(trace_id) if trace_id else _spans()
+    return _dump(core.failure_report(spans, trace_id=None, limit=limit))
+
+
+@mcp.tool()
+def tool_stats(trace_id: str | None = None, tool_name: str | None = None, limit: int = 50) -> str:
+    """Rank tools by errors, denials, latency, and call volume to find unhealthy integrations."""
+    spans = _resolve(trace_id) if trace_id else _spans()
+    return _dump(core.tool_stats(spans, trace_id=None, tool_name=tool_name, limit=limit))
+
+
+@mcp.tool()
+def security_audit(trace_id: str | None = None, limit: int = 100) -> str:
+    """Audit caller identity, tenant, server provenance, risk, and approval evidence for tool calls."""
+    spans = _resolve(trace_id) if trace_id else _spans()
+    return _dump(core.security_audit(spans, trace_id=None, limit=limit))
+
+
+@mcp.tool()
+def recent_activity(
+    cursor: str | None = None,
+    trace_id: str | None = None,
+    limit: int = 50,
+) -> str:
+    """Poll newly written spans using a cursor; useful while an agent run is still active."""
+    spans = _resolve(trace_id) if trace_id else _spans()
+    return _dump(core.recent_activity(spans, cursor=cursor, trace_id=None, limit=limit))
+
+
+@mcp.tool()
+def compare_runs(trace_ids: list[str]) -> str:
+    """Compare selected trace-id prefixes for latency, cost, tokens, tools, and failures."""
+    return _dump(core.compare_runs(_spans(), trace_ids))
 
 
 def main() -> None:

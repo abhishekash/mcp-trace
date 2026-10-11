@@ -28,6 +28,14 @@ class TestLoading:
     def test_load_trace_dir(self, trace_dir):
         assert len(core.load_trace_dir(trace_dir)) == 15
 
+    def test_load_trace_dir_recursive(self, trace_dir):
+        nested = trace_dir / "2026" / "04"
+        nested.mkdir(parents=True)
+        import shutil
+
+        shutil.copy("tests/fixtures/demo_trace.jsonl", nested / "nested.jsonl")
+        assert len(core.load_trace_dir(trace_dir)) == 30
+
     def test_missing_dir(self):
         with pytest.raises(FileNotFoundError):
             core.load_trace_dir("/nope/not-here")
@@ -96,6 +104,50 @@ class TestTokenUsage:
         assert usage["llm_calls"] == 5
         assert usage["input_tokens"] == 92 + 94 + 125 + 132 + 196
         assert usage["output_tokens"] > 0
+
+
+class TestNewQueries:
+    def test_failure_report_is_bounded_and_redacted(self, spans):
+        failed = dict(spans[1])
+        failed["attributes"] = {
+            **failed["attributes"],
+            "tool.result_status": "error",
+            "tool.error_message": "authorization: Bearer sk-12345678901234567890",
+        }
+        report = core.failure_report(spans + [failed], limit=1)
+        assert len(report) == 1
+        assert report[0]["result_status"] == "error"
+        assert "sk-123" not in report[0]["detail"]
+        assert "<redacted>" in report[0]["detail"]
+
+    def test_tool_stats(self, spans):
+        stats = core.tool_stats(spans)
+        assert len(stats) == 4
+        shell = next(row for row in stats if row["tool"] == "run_shell")
+        assert shell["calls"] == 1
+        assert shell["errors"] == 0
+        assert shell["p95_duration_ms"] > 0
+
+    def test_security_audit_flags_missing_provenance(self, spans):
+        audit = core.security_audit(spans)
+        assert audit["calls"] == 4
+        assert audit["missing_identity"] == 4
+        assert audit["missing_server_provenance"] == 4
+        assert audit["records"][0]["identity"] is None
+
+    def test_recent_activity_uses_cursor(self, spans):
+        first = core.recent_activity(spans, limit=2)
+        second = core.recent_activity(spans, cursor=first["next_cursor"], limit=2)
+        assert first["count"] == 2
+        assert second["count"] == 2
+        assert not {row["span_id"] for row in first["spans"]} & {
+            row["span_id"] for row in second["spans"]
+        }
+
+    def test_compare_runs(self, spans):
+        compared = core.compare_runs(spans, [TRACE_ID, TRACE_ID])
+        assert len(compared["runs"]) == 2
+        assert compared["runs"][1]["delta_vs_first"]["total_tokens"] == 0
 
 
 class TestSearch:

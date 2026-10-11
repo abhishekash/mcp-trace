@@ -4,7 +4,7 @@
 
 [![CI](https://github.com/abhishekash/mcp-trace/actions/workflows/ci.yml/badge.svg)](https://github.com/abhishekash/mcp-trace/actions/workflows/ci.yml) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-**Agents that can debug themselves.** An MCP server that exposes your agent runs — stored as plain OpenTelemetry JSONL span files — as queryable tools: runs, span trees, slow spans, human-approval logs, token/cost usage.
+**Agents that can debug themselves.** An MCP server that exposes your agent runs — stored as plain OpenTelemetry JSONL span files — as queryable tools: runs, span trees, failures, tool health, security evidence, live activity, regressions, human-approval logs, token/cost usage.
 
 The idea: observability shouldn't be a dashboard you read after the fact. It should be *tools your agent can call mid-run* — "why was I slow yesterday?", "what did the human deny me last time?", "which tool keeps timing out?" — or query interactively from Claude Desktop / pi / any MCP client.
 
@@ -17,8 +17,12 @@ Pairs with [agent-harness](https://github.com/abhishekash/agent-harness) (which 
 | "Why did yesterday's run stall?" | `list_runs` → `slowest_spans` | Run IDs and the longest model or tool spans. |
 | "Did the agent act after I denied the write?" | `approval_log` → `span_tree` | The recorded decision and subsequent execution path. |
 | "How many model tokens did this run use?" | `token_usage` → `span_tree` | Run-level usage totals and the span tree for context. |
+| "Which tool is failing or timing out?" | `failure_report` / `tool_stats` | Redacted diagnostics, error rates, denials, and p95 latency. |
+| "Who/what was allowed to act?" | `security_audit` | Caller, tenant, server provenance, risk, and missing-evidence findings. |
+| "What is happening in the run right now?" | `recent_activity` | Cursor-based polling of newly written spans. |
+| "Did this model/version regress?" | `compare_runs` | Cost, latency, tokens, tool calls, and failure deltas. |
 
-The tools read stored traces; they do not monitor a live run or infer intent from the final answer. See the [real trace fixture](examples/example_trace.jsonl) and the [tool descriptions](src/mcp_trace/server.py) for the exact query contract.
+The tools read stored traces and can poll files being written, but they do not push events or infer intent from the final answer. See the [real trace fixture](examples/example_trace.jsonl) and the [tool descriptions](src/mcp_trace/server.py) for the exact query contract.
 
 ## Install & run
 
@@ -79,6 +83,11 @@ harness run "Why was my last run slow?" --mcp "uvx abhishekash-mcp-trace --trace
 | `approval_log` | HITL audit — every approve/deny/**edit**, who decided, and *the rationale* |
 | `token_usage` | Cost questions — aggregated across runs or per-run |
 | `search_spans` | Find spans by tool name, file path, "denied", … |
+| `failure_report` | Find actionable, bounded, redacted errors and failed tool calls. |
+| `tool_stats` | Rank tools by volume, error rate, denials, and latency. |
+| `security_audit` | Audit caller identity, tenant, server provenance, risk, and approval evidence. |
+| `recent_activity` | Poll new spans with a cursor while a run is active. |
+| `compare_runs` | Compare selected traces for regressions across models or versions. |
 
 Tool descriptions are written as prompts (when-to-use, not just what-it-does) — descriptions are the interface for agent-called tools.
 
@@ -106,14 +115,34 @@ traces/*.jsonl ──▶ mcp_trace.core (pure query functions, zero deps)
 
 - **core/server split**: all logic is pure functions over parsed spans; the MCP layer only parses args and JSON-encodes results. Tests hit both layers.
 - **trace_id prefixes**: agents fumble full 32-char hex ids; every tool accepts prefixes.
+- **bounded output**: diagnostics are truncated and obvious credentials are redacted before query results leave the server.
+- **cursor polling**: `recent_activity` makes the snapshot reader useful while a run is still writing spans.
 - The demo fixture ([`examples/example_trace.jsonl`](examples/example_trace.jsonl)) is a *real* agent-harness run, not hand-written.
+
+## Research-driven gaps addressed
+
+A small Reddit review surfaced the same production problems repeatedly: auth and
+identity are unclear after the demo, versions and logs are hard to compare,
+tool fleets become noisy and expensive, operators lack visibility into what is
+happening, and raw logs are not a useful analysis surface. Examples:
+
+- [ChatGPT + MCP gets painful after the demo](https://www.reddit.com/r/ChatGPTPro/comments/1uz6tzs/where_chatgpt_mcp_gets_painful_after_the_demo/) — auth, versions, logs, and safe tools.
+- [MCP logging and correlation IDs](https://www.reddit.com/r/softwarearchitecture/comments/1r2wnfd/is_mcp_effectively_introducing_a_probabilistic/o51k4zq/) — preserve intent, tool arguments, results, and correlation IDs.
+- [180 tools becomes a permission/context/debugging problem](https://www.reddit.com/r/ClaudeAI/comments/1tuqqpn/i_ship_ai_agents_in_production_the_mess_is_mcp/opbh78y/).
+- [MCP security](https://www.reddit.com/r/cybersecurity/comments/1tgs4gg/mcp_security/) — identity, access, credentials, approved versions, and audit logs.
+- [Raw logs are noisy and hard to query](https://www.reddit.com/r/ChatGPTPro/comments/1ur2tx4/i_made_my_codex_usage_tracker_more_agentnative/).
+
+This update adds five focused query surfaces rather than pretending a
+Dashboard solves those problems: `failure_report`, `tool_stats`,
+`security_audit`, `recent_activity`, and `compare_runs`. Trace discovery is also
+recursive, and query results redact obvious credential patterns.
 
 ## Honest limitations
 
-- stdio transport only (no Streamable HTTP yet)
-- non-recursive trace-dir scan; very large dirs should use per-file loading
-- no span streaming/watching — snapshots at call time
-- v0.1: read-only tools; trace *mutation* (annotations) is roadmap
+- stdio transport only (Streamable HTTP plus authenticated remote access is the next transport boundary)
+- live polling re-reads snapshots; it is not a push subscription
+- security audit can only report identity/provenance that the trace producer records
+- read-only tools; trace mutation (annotations) is roadmap
 
 ## License
 

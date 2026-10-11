@@ -29,6 +29,11 @@ async def test_tools_registered():
         "approval_log",
         "token_usage",
         "search_spans",
+        "failure_report",
+        "tool_stats",
+        "security_audit",
+        "recent_activity",
+        "compare_runs",
     }
     # descriptions should say *when* to use the tool, not just what it does
     slowest = next(t for t in tools if t.name == "slowest_spans")
@@ -70,3 +75,32 @@ async def test_span_tree_tool():
     tree = json.loads(result.content[0].text)
     assert tree["name"] == "agent.run"
     assert len(tree["children"]) == 5
+
+
+@pytest.mark.anyio
+async def test_failure_report_tool():
+    result = await server.mcp.call_tool("failure_report", {"trace_id": "f920798d"})
+    assert json.loads(result.content[0].text) == []
+
+
+@pytest.mark.anyio
+async def test_tool_stats_and_security_audit_tools():
+    stats = await server.mcp.call_tool("tool_stats", {"trace_id": "f920798d"})
+    stats_data = json.loads(stats.content[0].text)
+    assert len(stats_data) == 4
+
+    audit = await server.mcp.call_tool("security_audit", {"trace_id": "f920798d"})
+    audit_data = json.loads(audit.content[0].text)
+    assert audit_data["missing_identity"] == 4
+
+
+@pytest.mark.anyio
+async def test_recent_activity_and_compare_tools():
+    activity = await server.mcp.call_tool("recent_activity", {"limit": 2})
+    activity_data = json.loads(activity.content[0].text)
+    assert activity_data["count"] == 2
+    compared = await server.mcp.call_tool(
+        "compare_runs", {"trace_ids": ["f920798d", "f920798d"]}
+    )
+    compared_data = json.loads(compared.content[0].text)
+    assert len(compared_data["runs"]) == 2
